@@ -3,7 +3,7 @@ import { PDFDocument, rgb, StandardFonts } from "pdf-lib"
 
 export async function POST(request: NextRequest) {
   try {
-    const { memberName, memberEmail, planType, amount, startDate, endDate } = await request.json()
+    const { memberName, memberEmail, planType, amount, startDate, endDate, additionalPlanDesc, additionalPlanAmount, phoneNumber, discount } = await request.json()
 
     const pdfDoc = await PDFDocument.create()
     const page = pdfDoc.addPage([595, 842]) // A4 size
@@ -81,6 +81,24 @@ export async function POST(request: NextRequest) {
       color: gray,
     })
 
+    page.drawText("GST No: 27AAACB1234C1Z1", {
+      x: 50,
+      y: height - 230,
+      size: 11,
+      font: helvetica,
+      color: gray,
+    })
+
+    if (phoneNumber) {
+      page.drawText(`Phone: ${phoneNumber}`, {
+        x: 50,
+        y: height - 250,
+        size: 11,
+        font: helvetica,
+        color: gray,
+      })
+    }
+
     // Invoice Details Table Header
     const tableTop = height - 280
     page.drawRectangle({
@@ -110,9 +128,16 @@ export async function POST(request: NextRequest) {
     // Table Rows
     const rows = [
       { label: "Plan Type", value: planType },
+      { label: "Plan Amount", value: `Rs. ${Number.parseFloat(amount).toFixed(2)}` },
       { label: "Start Date", value: new Date(startDate).toLocaleDateString() },
       { label: "End Date", value: new Date(endDate).toLocaleDateString() },
     ]
+    if (additionalPlanDesc && additionalPlanAmount) {
+      rows.push({ label: `Additional: ${additionalPlanDesc}`, value: `Rs. ${Number.parseFloat(additionalPlanAmount).toFixed(2)}` })
+    }
+    if (discount && Number(discount) > 0) {
+      rows.push({ label: "Discount", value: `Rs. ${Number(discount).toFixed(2)}` })
+    }
 
     let yPos = tableTop - 35
     rows.forEach((row) => {
@@ -159,7 +184,8 @@ export async function POST(request: NextRequest) {
       color: rgb(1, 1, 1),
     })
 
-    page.drawText(`$${Number.parseFloat(amount).toFixed(2)}`, {
+    const totalAmount = Number.parseFloat(amount) + (Number.parseFloat(additionalPlanAmount) || 0) - (Number(discount) || 0)
+    page.drawText(`Rs. ${totalAmount.toFixed(2)}`, {
       x: 450,
       y: yPos,
       size: 14,
@@ -170,10 +196,18 @@ export async function POST(request: NextRequest) {
     // Footer
     page.drawText("Thank you for being a valued member of XYZ Gym!", {
       x: 150,
-      y: 80,
+      y: 100,
       size: 11,
       font: helvetica,
       color: gray,
+    })
+
+    page.drawText("Disclaimer: Fees are not refundable.", {
+      x: 150,
+      y: 80,
+      size: 10,
+      font: helvetica,
+      color: red,
     })
 
     page.drawText("Stay fit, stay strong!", {
