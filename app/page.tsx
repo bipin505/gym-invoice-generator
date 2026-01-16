@@ -133,19 +133,14 @@ export default function GymInvoiceGenerator() {
                 placeholder="XXXXXXXXXX"
                 value={formData.phoneNumber}
                 onChange={handleChange}
-                pattern="^[0-9]{10}$"
+                pattern="[0-9]{10}"
+                maxLength={10}
+                minLength={10}
                 required
                 className="bg-input border-border rounded-l-none"
               />
             </div>
           </div>
-
-          <div className="space-y-2">
-            <Label>GST Number</Label>
-            <div className="bg-input border-border rounded-md p-2">27AAACB1234C1Z1</div>
-          </div>
-
-         
 
           <div className="space-y-2">
             <Label htmlFor="memberEmail">Member Email</Label>
